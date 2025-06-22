@@ -56,9 +56,9 @@
 | `CommentTemplates` | Template commenti | Categoria, priorità, modificabili |
 
 ### **Relazioni Chiave**
-- `CommodityConfig.Symbol` → `CommodityPrices.Symbol` (1:N)
-- `CommodityConfig.Symbol` → `CommodityStatus.Symbol` (1:1)
-- `CommodityStatus.Symbol` → `TrendHistory.Symbol` (1:N)
+- `CommodityConfig.Id` → `CommodityPrices.CommodityConfigId` (1:N)
+- `CommodityConfig.Id` → `CommodityStatus.CommodityConfigId` (1:1)
+- `CommodityConfig.Id` → `TrendHistory.CommodityConfigId` (1:N)
 
 ### **Indici Performance**
 - Range temporali ottimizzati (MA30 calculation)
@@ -71,8 +71,8 @@
 
 ### **7 Commodity Configurate**
 ```
-COPPER (3.5%), SILVER (3.0%), PALLADIUM (4.0%), URANIUM (6.0%), 
-PLATINUM (3.5%), SOYBEAN (3.0%), COFFEE (4.5%)
+HG=F (Rame 3.5%), SI=F (Argento 3.0%), PA=F (Palladio 4.0%), URA (Uranio 6.0%), 
+PL=F (Platino 3.5%), ZS=F (Soia 3.0%), KC=F (Caffè 4.5%)
 ```
 
 ### **Template Commenti Implementati**

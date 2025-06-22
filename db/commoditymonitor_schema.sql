@@ -30,26 +30,27 @@ CREATE INDEX IX_CommodityConfig_Active ON CommodityConfig(Active) WHERE Active =
 -- =====================================================
 CREATE TABLE CommodityPrices (
     Id SERIAL PRIMARY KEY,
-    Symbol VARCHAR(10) NOT NULL,
+    CommodityConfigId INTEGER NOT NULL,
     Date DATE NOT NULL,
     Price DECIMAL(18,6) NOT NULL,
     MA30 DECIMAL(18,6) NULL, -- Media Mobile 30 giorni pre-calcolata
     SectorIndexValue DECIMAL(18,6) NULL, -- Valore indice settoriale del giorno
     GlobalIndexValue DECIMAL(18,6) NULL, -- Valore indice globale (BCOM) del giorno
-    CreatedAt TIMESTAMP DEFAULT NOW()
+    CreatedAt TIMESTAMP DEFAULT NOW(),
+    FOREIGN KEY (CommodityConfigId) REFERENCES CommodityConfig(Id)
 );
 
 -- Indici per performance su query temporali
-CREATE UNIQUE INDEX IX_CommodityPrices_Symbol_Date ON CommodityPrices(Symbol, Date);
+CREATE UNIQUE INDEX IX_CommodityPrices_ConfigId_Date ON CommodityPrices(CommodityConfigId, Date);
 CREATE INDEX IX_CommodityPrices_Date ON CommodityPrices(Date);
-CREATE INDEX IX_CommodityPrices_Symbol_DateDesc ON CommodityPrices(Symbol, Date DESC);
+CREATE INDEX IX_CommodityPrices_ConfigId_DateDesc ON CommodityPrices(CommodityConfigId, Date DESC);
 
 -- =====================================================
 -- 3. COMMODITY_STATUS - Stato Attuale Trend
 -- =====================================================
 CREATE TABLE CommodityStatus (
     Id SERIAL PRIMARY KEY,
-    Symbol VARCHAR(10) NOT NULL UNIQUE,
+    CommodityConfigId INTEGER NOT NULL UNIQUE,
     IsInTrend BOOLEAN NOT NULL DEFAULT FALSE,
     DaysInTrend INTEGER NOT NULL DEFAULT 0,
     TrendStartDate DATE NULL,
@@ -58,7 +59,8 @@ CREATE TABLE CommodityStatus (
     SectorDeviation DECIMAL(8,3) NULL, -- Scostamento % vs Settore
     GlobalDeviation DECIMAL(8,3) NULL, -- Scostamento % vs Globale
     CreatedAt TIMESTAMP DEFAULT NOW(),
-    UpdatedAt TIMESTAMP DEFAULT NOW()
+    UpdatedAt TIMESTAMP DEFAULT NOW(),
+    FOREIGN KEY (CommodityConfigId) REFERENCES CommodityConfig(Id)
 );
 
 -- Indici per query frequenti
@@ -70,39 +72,41 @@ CREATE INDEX IX_CommodityStatus_LastUpdate ON CommodityStatus(LastUpdateDate);
 -- =====================================================
 CREATE TABLE TrendHistory (
     Id SERIAL PRIMARY KEY,
-    Symbol VARCHAR(10) NOT NULL,
+    CommodityConfigId INTEGER NOT NULL,
     Date DATE NOT NULL,
     IsInTrend BOOLEAN NOT NULL,
     DaysInTrend INTEGER NOT NULL,
     MA30Deviation DECIMAL(8,3) NULL,
     SectorDeviation DECIMAL(8,3) NULL,
     GlobalDeviation DECIMAL(8,3) NULL,
-    CreatedAt TIMESTAMP DEFAULT NOW()
+    CreatedAt TIMESTAMP DEFAULT NOW(),
+    FOREIGN KEY (CommodityConfigId) REFERENCES CommodityConfig(Id)
 );
 
 -- Indici per analisi storiche
-CREATE UNIQUE INDEX IX_TrendHistory_Symbol_Date ON TrendHistory(Symbol, Date);
+CREATE UNIQUE INDEX IX_TrendHistory_ConfigId_Date ON TrendHistory(CommodityConfigId, Date);
 CREATE INDEX IX_TrendHistory_Date ON TrendHistory(Date);
-CREATE INDEX IX_TrendHistory_Symbol_InTrend ON TrendHistory(Symbol, IsInTrend);
+CREATE INDEX IX_TrendHistory_ConfigId_InTrend ON TrendHistory(CommodityConfigId, IsInTrend);
 
 -- =====================================================
 -- 5. ALERTS - Log Alert Entrata/Uscita
 -- =====================================================
 CREATE TABLE Alerts (
     Id SERIAL PRIMARY KEY,
-    Symbol VARCHAR(10) NOT NULL,
+    CommodityConfigId INTEGER NOT NULL,
     AlertType VARCHAR(20) NOT NULL, -- 'TREND_START', 'TREND_END', 'TREND_CONTINUE'
     Date DATE NOT NULL,
     Message TEXT NOT NULL,
     MA30Deviation DECIMAL(8,3) NULL,
     SectorDeviation DECIMAL(8,3) NULL,
     GlobalDeviation DECIMAL(8,3) NULL,
-    CreatedAt TIMESTAMP DEFAULT NOW()
+    CreatedAt TIMESTAMP DEFAULT NOW(),
+    FOREIGN KEY (CommodityConfigId) REFERENCES CommodityConfig(Id)
 );
 
 -- Indici per report e query
 CREATE INDEX IX_Alerts_Date ON Alerts(Date);
-CREATE INDEX IX_Alerts_Symbol_Date ON Alerts(Symbol, Date);
+CREATE INDEX IX_Alerts_ConfigId_Date ON Alerts(CommodityConfigId, Date);
 CREATE INDEX IX_Alerts_AlertType ON Alerts(AlertType);
 
 -- =====================================================
@@ -169,25 +173,22 @@ CREATE TRIGGER update_commenttemplates_updated_at BEFORE UPDATE ON CommentTempla
 -- POPOLAZIONE DATI INIZIALI
 -- =====================================================
 
--- Inserimento Configurazioni Commodity (da commodity_config_defaults.md)
+-- Inserimento Configurazioni Commodity con Ticker Corretti
 INSERT INTO CommodityConfig (Symbol, Name, ThresholdPct, Sector, SectorIndexSymbol, GlobalIndexSymbol, ValidFrom, ValidTo, Active) VALUES
-('COPPER', 'Rame', 3.50, 'Metalli', 'DBB', 'BCOM', '2025-01-01', NULL, TRUE),
-('SILVER', 'Argento', 3.00, 'Metalli', 'SLV', 'BCOM', '2025-01-01', NULL, TRUE),
-('PALLADIUM', 'Palladio', 4.00, 'Metalli', 'PALL', 'BCOM', '2025-01-01', NULL, TRUE),
-('URANIUM', 'Uranio', 6.00, 'Energia', 'URA', 'BCOM', '2025-01-01', NULL, TRUE),
-('PLATINUM', 'Platino', 3.50, 'Metalli', 'PPLT', 'BCOM', '2025-01-01', NULL, TRUE),
-('SOYBEAN', 'Soia', 3.00, 'Agricolo', 'SOYB', 'BCOM', '2025-01-01', NULL, TRUE),
-('COFFEE', 'Caffè', 4.50, 'Agricolo', 'JO', 'BCOM', '2025-01-01', NULL, TRUE);
+('HG=F', 'Rame', 3.50, 'Metalli', 'DBB', 'BCOM', '2025-01-01', NULL, TRUE),
+('SI=F', 'Argento', 3.00, 'Metalli', 'SLV', 'BCOM', '2025-01-01', NULL, TRUE),
+('PA=F', 'Palladio', 4.00, 'Metalli', 'PALL', 'BCOM', '2025-01-01', NULL, TRUE),
+('URA', 'Uranio', 6.00, 'Energia', 'URA', 'BCOM', '2025-01-01', NULL, TRUE),
+('PL=F', 'Platino', 3.50, 'Metalli', 'PPLT', 'BCOM', '2025-01-01', NULL, TRUE),
+('ZS=F', 'Soia', 3.00, 'Agricolo', 'SOYB', 'BCOM', '2025-01-01', NULL, TRUE),
+('KC=F', 'Caffè', 4.50, 'Agricolo', 'JO', 'BCOM', '2025-01-01', NULL, TRUE);
 
 -- Inizializzazione CommodityStatus per tutte le commodity
-INSERT INTO CommodityStatus (Symbol, IsInTrend, DaysInTrend, LastUpdateDate) VALUES
-('COPPER', FALSE, 0, CURRENT_DATE),
-('SILVER', FALSE, 0, CURRENT_DATE),
-('PALLADIUM', FALSE, 0, CURRENT_DATE),
-('URANIUM', FALSE, 0, CURRENT_DATE),
-('PLATINUM', FALSE, 0, CURRENT_DATE),
-('SOYBEAN', FALSE, 0, CURRENT_DATE),
-('COFFEE', FALSE, 0, CURRENT_DATE);
+-- Nota: usiamo i nuovi ID generati da CommodityConfig
+INSERT INTO CommodityStatus (CommodityConfigId, IsInTrend, DaysInTrend, LastUpdateDate)
+SELECT Id, FALSE, 0, CURRENT_DATE 
+FROM CommodityConfig 
+WHERE ValidTo IS NULL AND Active = TRUE;
 
 -- Inserimento Template Commenti (da templates.md)
 INSERT INTO CommentTemplates (Category, Priority, TemplateText, Active) VALUES
@@ -204,14 +205,14 @@ INSERT INTO CommentTemplates (Category, Priority, TemplateText, Active) VALUES
 -- =====================================================
 
 -- Indici compositi per query complesse del sistema
-CREATE INDEX IX_CommodityPrices_Symbol_LastDays ON CommodityPrices(Symbol, Date DESC) 
+CREATE INDEX IX_CommodityPrices_ConfigId_LastDays ON CommodityPrices(CommodityConfigId, Date DESC) 
     WHERE Date >= CURRENT_DATE - INTERVAL '35 days'; -- Per calcolo MA30
 
-CREATE INDEX IX_TrendHistory_Symbol_LastWeek ON TrendHistory(Symbol, Date DESC)
+CREATE INDEX IX_TrendHistory_ConfigId_LastWeek ON TrendHistory(CommodityConfigId, Date DESC)
     WHERE Date >= CURRENT_DATE - INTERVAL '7 days'; -- Per report settimanali
 
 -- Indice parziale per configurazioni attive
-CREATE INDEX IX_CommodityConfig_ActiveCurrent ON CommodityConfig(Symbol, ThresholdPct, SectorIndexSymbol)
+CREATE INDEX IX_CommodityConfig_ActiveCurrent ON CommodityConfig(Id, Symbol, ThresholdPct, SectorIndexSymbol)
     WHERE ValidTo IS NULL AND Active = TRUE;
 
 -- =====================================================
