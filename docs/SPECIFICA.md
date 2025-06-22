@@ -1,126 +1,142 @@
-# 📈 Sistema di Monitoraggio e Analisi delle Materie Prime
+# 📘 SPECIFICA GENERALE – Sistema CommodityMonitor
 
 ## 🎯 Obiettivo
 
-Monitorare giornalmente una selezione di materie prime per identificare l'inizio e la fine di trend direzionali, basandosi su scostamenti rispetto a benchmark, indici settoriali e un indice globale.
+Monitorare giornalmente una selezione di materie prime per identificare l’inizio e la fine di trend direzionali basandosi su scostamenti rispetto a:
+- una media mobile a 30 giorni (benchmark primario)
+- un indice settoriale
+- un indice globale (Bloomberg Commodity Index - BCOM)
+
+Fornire alert tramite email testuale giornaliera e un report settimanale in HTML ricco di grafici, commenti e notizie.
 
 ---
 
 ## ⚙️ Architettura Tecnica
 
-- **Linguaggio**: C# (.NET 8)
-- **Database**: PostgreSQL
-- **Fonte Dati**: Yahoo Finance
-- **Frequenza**: Giornaliera (prezzi e benchmark)
-- **Formati Output**:
-  - Email giornaliera (testo)
-  - Report settimanale (HTML con grafici e news)
-- **Report settimanale generato ogni**: Sabato mattina
+📄 Vedi: [ARCHITECTURE.md](ARCHITECTURE.md)
+
+- Linguaggio: .NET 8 (C#)
+- Database: PostgreSQL
+- Fonte Dati: Yahoo Finance
+- Scheduler: giornaliero (dati e calcoli), settimanale (report)
+- Output: email testo + report HTML
+- Modulare, configurabile e facilmente estendibile
 
 ---
 
-## 🔢 Logica dei Calcoli
+## 📊 Logiche di Calcolo
 
-### 🔍 Scostamenti monitorati:
-1. Media mobile 30 giorni (benchmark primario)
-2. Indice settoriale (es. S&P GSCI)
-3. Indice globale: Bloomberg Commodity Index (BCOM)
+### 🔢 Scostamenti monitorati
+1. Media Mobile 30 giorni (MA30)
+2. Indice Settoriale (es. DBB, SLV, URA…)
+3. Indice Globale (BCOM)
 
-### 📐 Formula Scostamento:
+### 📐 Formula Scostamento
 ```
 Scostamento = ((Prezzo Attuale - Valore Benchmark) / Valore Benchmark) * 100
 ```
 
 ---
 
-## 🚦 Logica di Attivazione/Disattivazione Trend
+## 🚦 Regole di Attivazione Trend
 
 ### ✅ Entrata in Trend
-Un trend si attiva quando **almeno uno** dei tre scostamenti supera la soglia.
+Un trend è **attivo** se almeno uno degli scostamenti supera la soglia configurata.
 
 ### ❌ Uscita dal Trend
-Il trend termina quando **tutti e tre** i valori rientrano sotto soglia.
+Un trend termina quando **tutti e tre** gli scostamenti rientrano sotto soglia.
 
-### 🧠 Stato Trend Tracciato:
-- Data inizio trend
-- Data uscita
-- Giorni in trend
-- Tipo di attivazione
-- Spread massimo registrato
+🔗 Configurazioni: [commodity_config_defaults.md](commodity_config_defaults.md)
 
 ---
 
-## 📨 Notifiche
+## ✉️ Notifiche e Report
 
-### 📧 Email giornaliera (solo testo)
-- Commodity entrate/uscite dal trend
-- Stato corrente
-- Nessun allegato
+### 📨 Email Giornaliera (solo testo)
+📄 Specifiche: [daily_report_spec.md](daily_report_spec.md)
 
-### 📊 Report settimanale (HTML)
-- Generato sabato mattina
-- Contiene:
-  - Contesto macro
-  - Contesto settoriale
-  - Dettaglio per ogni commodity attiva
+- Riepilogo alert: entrata, mantenimento, uscita trend
+- Commenti dinamici
+- Nessun grafico o allegato
 
----
+### 📊 Report Settimanale (HTML)
+📄 Specifiche: [weekly_report_spec.md](weekly_report_spec.md)
 
-## 📊 Report Settimanale – Struttura
-
-### 🔵 Contesto Macroeconomico
-- Andamento settimanale:
-  - Bloomberg Commodity Index (BCOM)
-  - S&P 500
-  - VIX
-  - US10Y
-- Link a fonti di verifica (Yahoo Finance, Investing.com)
-- Commento automatico (testuale)
-
-### 🟠 Contesto Settoriale
-- Performance settimanale dei macro-settori
-- Grafico a barre (ranking settoriale)
-- Commodity leader per settore
-- Commento automatico
-
-### 🟢 Focus su Commodity Attive
-Per ogni commodity “in trend”:
-- Nome, simbolo, giorni attivi
-- Grafico linea: prezzo vs media mobile
-- Scostamenti vs benchmark, settore, globale
-- Ultimo alert generato
-- Notizie principali (fino a 3) con fonte
-- Commento automatico (vedi appendice)
+- Contesto macroeconomico (BCOM, S&P500, VIX)
+- Settori: ranking e variazioni
+- Commodity attive: dettaglio con grafici, notizie, commenti
+- Max 3 link verificati per commodity
+- 🔗 Esempi: [file_esempi.md](file_esempi.md)
 
 ---
 
-## 🧠 Appendice: Commenti Automatici – Template a Regole
+## 🧠 Commenti Automatici
 
-Il sistema utilizza una lista ordinata di **template dinamici**, selezionati in base a priorità e condizioni attive.
+📄 Template commenti: [templates.md](templates.md)
 
-### 📥 Entrata in Trend
-[template table omessa per brevità]
-
-### 🔁 Mantenimento del Trend
-[template table omessa per brevità]
-
-### 📤 Uscita dal Trend
-[template table omessa per brevità]
+- Sistema di template dinamici
+- Priorità e condizioni
+- Espandibili nel tempo
+- Usati sia nelle email che nei report
 
 ---
 
-## 🗃️ Struttura Database (PostgreSQL)
-[descrizione delle tabelle omessa per brevità]
+## 🔐 Linee Guida per l’IA
+
+📄 [IA_guidelines.md](IA_guidelines.md)
+
+- Evitare allucinazioni
+- Usare solo dati, soglie e template approvati
+- Nessuna previsione o interpretazione autonoma
+- Struttura deterministica, spiegabile e verificabile
 
 ---
 
-## 🧭 Linee guida per intelligenza artificiale o sviluppatore
+## 👤 Guida Operativa
 
-### ✅ Cosa deve fare
-[lista omessa per brevità]
+📘 [OPERATOR_GUIDE.md](OPERATOR_GUIDE.md)
 
-### ❌ Cosa NON deve fare
-[lista omessa per brevità]
+- Come leggere email e report
+- Dove verificare notizie e prezzi
+- Validazioni manuali e alert
 
-### 🛡️ Obiettivo
-[descrizione omessa per brevità]
+---
+
+## 🗄️ Struttura Database
+
+- `commodity_config`: soglie, indici, stato attivo
+- `commodity_prices`: prezzi, media mobile, benchmark
+- `commodity_status`: stato attuale, giorni in trend
+- `trend_history`: storico completo trend
+- `alerts`: log alert entrata/uscita
+
+---
+
+## 📌 Prerequisiti
+
+- Yahoo Finance Wrapper/API
+- Connettività SMTP per invio email
+- Libreria grafica compatibile con .NET (ChartJS, SVG)
+- Logging e fallback su database
+
+---
+
+## 🚀 Estensioni Future
+
+- Dashboard web interattiva
+- AI per generazione commenti (fase 2)
+- Calcolo dinamico soglie in base a volatilità
+- Notifiche Telegram / Push
+
+---
+
+## 📁 File di Riferimento
+- [README.md](README.md)
+- [ARCHITECTURE.md](ARCHITECTURE.md)
+- [templates.md](templates.md)
+- [weekly_report_spec.md](weekly_report_spec.md)
+- [daily_report_spec.md](daily_report_spec.md)
+- [file_esempi.md](file_esempi.md)
+- [IA_guidelines.md](IA_guidelines.md)
+- [commodity_config_defaults.md](commodity_config_defaults.md)
+- [OPERATOR_GUIDE.md](OPERATOR_GUIDE.md)
